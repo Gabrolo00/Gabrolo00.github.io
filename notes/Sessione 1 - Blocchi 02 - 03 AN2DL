@@ -1,0 +1,143 @@
+**Sessione 1 - Blocchi 02 - 03 AN2DL**
+
+**Stato: da rivedere**
+
+Spiegazione:
+
+- Perceptron | MLP: Il perceptron è un singolo neurone artificiale che 
+  calcola la somma pesata degli input più un bias e la passa attraverso 
+  una funzione di attivazione. Può risolvere solo problemi linearmente 
+  separabili. Il Multi-Layer Perceptron (MLP) impila più layer di 
+  neuroni con funzioni di attivazione non lineari tra uno e l'altro, 
+  permettendo di approssimare funzioni complesse e non lineari.
+
+- Feed forward, backpropagation, SGD: Il feed forward è il passaggio 
+  dei dati in avanti attraverso i layer, da input a output, per 
+  produrre una predizione. La loss misura l'errore tra predizione 
+  e target. La backpropagation percorre il grafo computazionale 
+  all'indietro calcolando il gradiente della loss rispetto a ogni 
+  peso. SGD (Stochastic Gradient Descent) aggiorna i pesi nella 
+  direzione opposta al gradiente, usando mini-batch casuali invece 
+  dell'intero dataset. Dopo ogni aggiornamento si azzerano i gradienti 
+  per evitare accumulo tra un batch e l'altro.
+
+- Split dei set: Il dataset si divide in train, validation e test. 
+  Il train set serve per aggiornare i pesi. Il validation set monitora 
+  la performance durante il training senza mai essere usato per 
+  aggiornare i pesi — serve per decidere quando fermarsi (early 
+  stopping) e per confrontare diverse configurazioni. Il test set 
+  si usa una volta sola alla fine per la valutazione definitiva.
+
+- Cross-validation | Hyperparameter tuning: La cross-validation è 
+  un metodo per valutare la bontà di una configurazione di 
+  hyperparameter (learning rate, numero di layer, dropout rate). 
+  Si divide il train set in k parti, si allena k volte usando ogni 
+  volta una parte diversa come validation, e si calcola la performance 
+  media. Si ripete con configurazioni diverse e si sceglie la migliore. 
+  I pesi li aggiorna il training, la cross-validation valuta soltanto.
+
+- Dropout: Tecnica di regolarizzazione che disattiva neuroni casuali 
+  durante il training con una certa probabilità. Previene il 
+  co-adattamento: ogni neurone è costretto a essere utile 
+  indipendentemente dagli altri, migliorando la generalizzazione. 
+  Si disattiva durante l'inferenza con model.eval().
+
+- ReLU | LReLU: Funzioni di attivazione non lineari. ReLU restituisce 
+  max(0, x): i valori positivi passano, i negativi diventano zero. 
+  Il problema è il dying ReLU: se un neurone riceve solo input 
+  negativi, il gradiente è sempre zero e il neurone smette di 
+  aggiornarsi permanentemente. LReLU risolve assegnando una piccola 
+  pendenza ai valori negativi (es. 0.01x) così il gradiente non è 
+  mai completamente nullo.
+
+- Weight initialization: Inizializzare i pesi in modo appropriato è 
+  fondamentale per un training stabile. Xavier è progettato per 
+  attivazioni simmetriche (sigmoide, tanh). He è progettato per ReLU, 
+  che azzera metà dei valori: compensa usando pesi iniziali leggermente 
+  più grandi. Inizializzazione sbagliata causa vanishing o exploding 
+  gradients.
+
+- Batch Normalization: Normalizza i valori all'interno di un 
+  mini-batch per ogni feature, stabilizzando il training e 
+  permettendo learning rate più alti. Instance Normalization: 
+  normalizza ogni singolo campione indipendentemente, usata 
+  soprattutto in task di style transfer e generazione di immagini.
+
+Domande da colloquio:
+
+Domande da colloquio:
+
+1. Qual è la differenza tra gradient descent e stochastic gradient 
+   descent? Perché si preferisce SGD in pratica?
+
+   Gradient descent calcola il gradiente sull'intero dataset prima di 
+   aggiornare i pesi. SGD calcola il gradiente su un piccolo mini-batch 
+   casuale e aggiorna subito. Si preferisce SGD perché è molto più 
+   veloce su dataset grandi e il rumore introdotto dalla casualità dei 
+   batch aiuta a uscire dai minimi locali, migliorando la 
+   generalizzazione.
+
+2. Cos'è l'overfitting e nomina tre tecniche per contrastarlo.
+
+   L'overfitting si verifica quando il modello memorizza i pattern 
+   specifici dei dati di training invece di imparare regole generali, 
+   ottenendo alta performance sul training set ma scarsa su dati nuovi. 
+   Tre tecniche per contrastarlo: dropout (disattiva neuroni casuali 
+   durante il training), regolarizzazione L1/L2 (penalizza pesi 
+   troppo grandi aggiungendo un termine alla loss), e cross-validation 
+   (valuta la capacità di generalizzazione su diversi split dei dati).
+
+3. Perché servono le funzioni di attivazione? Cosa succede se togli 
+   tutte le ReLU da un MLP con 10 layer?
+
+   Le funzioni di attivazione introducono non-linearità nella rete. 
+   Senza di esse, ogni layer esegue solo operazioni lineari 
+   (moltiplicazioni e somme), e più layer lineari in cascata sono 
+   matematicamente equivalenti a un singolo layer lineare — le matrici 
+   si possono fondere in una sola. Un MLP con 10 layer senza 
+   attivazioni avrebbe la stessa capacità espressiva di un singolo 
+   layer, rendendo la profondità completamente inutile.
+
+4. Spiega il training loop passo per passo: cosa fa ognuno dei 5 step?
+
+   Forward: i dati passano in avanti attraverso i layer e il modello 
+   produce una predizione. Loss: si calcola l'errore confrontando la 
+   predizione con il target reale. Backward: si percorre il grafo 
+   computazionale all'indietro calcolando il gradiente della loss 
+   rispetto a ogni peso, depositandolo in .grad. Optimizer.step: si 
+   aggiornano effettivamente i pesi sottraendo il gradiente 
+   moltiplicato per il learning rate. Zero_grad: si azzerano i 
+   gradienti perché PyTorch li accumula di default, e senza azzerarli 
+   il prossimo batch sommerebbe i suoi gradienti a quelli vecchi.
+
+5. Qual è la differenza tra validation set e test set?
+
+   Il validation set si usa durante il training per monitorare la 
+   performance senza aggiornare i pesi. Serve per decidere quando 
+   fermarsi (early stopping), confrontare configurazioni di 
+   hyperparameter e rilevare overfitting. Il test set si usa una 
+   volta sola alla fine per la valutazione definitiva del modello. 
+   Nessuno dei due viene mai usato per aggiornare i pesi — quello 
+   lo fa solo il training set.
+
+6. Perché si usa CrossEntropyLoss per la classificazione invece 
+   di MSELoss?
+
+   MSELoss misura la distanza numerica tra valori e funziona per 
+   problemi di regressione (predire quantità continue). Nella 
+   classificazione l'output sono punteggi per ogni classe. 
+   CrossEntropyLoss converte questi punteggi in probabilità 
+   tramite softmax e poi penalizza pesantemente il modello quando 
+   assegna probabilità bassa alla classe corretta. È più adatta 
+   perché produce gradienti più forti quando il modello sbaglia 
+   con sicurezza, accelerando la correzione.
+
+7. Cosa fa model.eval() e perché è necessario prima dell'inferenza?
+
+   model.eval() imposta il modello in modalità valutazione. 
+   Concretamente: disattiva il dropout (tutti i neuroni vengono 
+   usati invece di spegnerne alcuni casuali) e cambia il 
+   comportamento della batch normalization (usa statistiche 
+   calcolate sull'intero training set invece che sul singolo 
+   mini-batch). Senza model.eval() i risultati dell'inferenza 
+   sarebbero instabili e non riproducibili.
